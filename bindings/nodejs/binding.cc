@@ -62,6 +62,7 @@ NAN_MODULE_INIT (Zyre::Init) {
     Nan::SetPrototypeMethod (tpl, "join", _join);
     Nan::SetPrototypeMethod (tpl, "leave", _leave);
     Nan::SetPrototypeMethod (tpl, "recv", _recv);
+    Nan::SetPrototypeMethod (tpl, "nextEvent", nextEvent);
     Nan::SetPrototypeMethod (tpl, "whisper", _whisper);
     Nan::SetPrototypeMethod (tpl, "shout", _shout);
     Nan::SetPrototypeMethod (tpl, "whispers", _whispers);
@@ -323,16 +324,18 @@ private:
 };
 
 NAN_METHOD (Zyre::_recv) {
-//    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-//    zmsg_t *result = zyre_recv (zyre->self);
-//    Zmsg *zmsg_result = new Zmsg (result);
-//    if (zmsg_result) {
-//    //  Don't yet know how to return a new object
-//    //      zmsg->Wrap (info.This ());
-//    //      info.GetReturnValue ().Set (info.This ());
-//        info.GetReturnValue ().Set (Nan::New<Boolean>(true));
-//    }
+    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    zmsg_t *result = zyre_recv (zyre->self);
+    Zmsg *zmsg_result = new Zmsg (result);
+    if (zmsg_result) {
+    //  Don't yet know how to return a new object
+    //      zmsg->Wrap (info.This ());
+    //      info.GetReturnValue ().Set (info.This ());
+        info.GetReturnValue ().Set (Nan::New<Boolean>(true));
+    }
+}
 
+NAN_METHOD(Zyre::nextEvent) {
     Zyre *zyreNode = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
     Callback *callback = new Callback(info[0].As<Function>());
     AsyncQueueWorker(new ZyreWorker(callback, zyreNode));
