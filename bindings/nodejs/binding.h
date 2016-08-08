@@ -76,9 +76,12 @@ class Zyre: public Nan::ObjectWrap {
 class ZyreEvent: public Nan::ObjectWrap {
     public:
         static NAN_MODULE_INIT (Init);
+        explicit ZyreEvent () {};
         explicit ZyreEvent (zyre_t *node);
         explicit ZyreEvent (zyre_event_t *self);
         zyre_event_t *self;
+        void JsObject(v8::Local<v8::Object>);
+    
     private:
         ~ZyreEvent ();
     static Nan::Persistent <Function> &constructor ();

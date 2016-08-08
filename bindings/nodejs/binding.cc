@@ -22,6 +22,20 @@
 using namespace v8;
 using namespace Nan;
 
+using v8::Function;
+using v8::Local;
+using v8::Number;
+using v8::Value;
+using Nan::AsyncQueueWorker;
+using Nan::AsyncWorker;
+using Nan::Callback;
+using Nan::HandleScope;
+using Nan::New;
+using Nan::Null;
+using Nan::To;
+
+Nan::Persistent <Function> zyreEventConstructor;
+
 NAN_MODULE_INIT (Zyre::Init) {
     Nan::HandleScope scope;
 
@@ -279,16 +293,49 @@ NAN_METHOD (Zyre::_leave) {
     info.GetReturnValue ().Set (Nan::New<Number>(result));
 }
 
-NAN_METHOD (Zyre::_recv) {
-    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
-    zmsg_t *result = zyre_recv (zyre->self);
-    Zmsg *zmsg_result = new Zmsg (result);
-    if (zmsg_result) {
-    //  Don't yet know how to return a new object
-    //      zmsg->Wrap (info.This ());
-    //      info.GetReturnValue ().Set (info.This ());
-        info.GetReturnValue ().Set (Nan::New<Boolean>(true));
+class ZyreWorker: public AsyncWorker {
+public:
+    ZyreWorker(Callback *callback, Zyre* zyreNode): AsyncWorker(callback), zyreNode(zyreNode) {}
+    ~ZyreWorker() {}
+    
+    void Execute() {
+        event = new ZyreEvent(zyreNode->self);
     }
+    
+    void HandleOKCallback() {
+        Nan::HandleScope scope;
+        
+        v8::Local<v8::Function> cons = Nan::New<v8::Function>(zyreEventConstructor);
+        v8::Local<v8::Object> result = cons->NewInstance();
+        event->JsObject(result);
+        
+        Local<Value> argv[] = {
+            Null(),
+            result
+        };
+        
+        callback->Call(2, argv);
+    }
+    
+private:
+    Zyre* zyreNode;
+    ZyreEvent* event;
+};
+
+NAN_METHOD (Zyre::_recv) {
+//    Zyre *zyre = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+//    zmsg_t *result = zyre_recv (zyre->self);
+//    Zmsg *zmsg_result = new Zmsg (result);
+//    if (zmsg_result) {
+//    //  Don't yet know how to return a new object
+//    //      zmsg->Wrap (info.This ());
+//    //      info.GetReturnValue ().Set (info.This ());
+//        info.GetReturnValue ().Set (Nan::New<Boolean>(true));
+//    }
+
+    Zyre *zyreNode = Nan::ObjectWrap::Unwrap <Zyre> (info.Holder ());
+    Callback *callback = new Callback(info[0].As<Function>());
+    AsyncQueueWorker(new ZyreWorker(callback, zyreNode));
 }
 
 NAN_METHOD (Zyre::_whisper) {
@@ -556,13 +603,23 @@ ZyreEvent::ZyreEvent (zyre_event_t *self_) {
 ZyreEvent::~ZyreEvent () {
 }
 
+void ZyreEvent::JsObject(v8::Local<v8::Object> value) {
+    this->Wrap(value);
+}
+
 NAN_METHOD (ZyreEvent::New) {
     assert (info.IsConstructCall ());
-    Zyre *node = Nan::ObjectWrap::Unwrap<Zyre>(info [0].As<Object>());
-    ZyreEvent *zyre_event = new ZyreEvent (node->self);
-    if (zyre_event) {
+    if (info.Length() == 0) {
+        ZyreEvent *zyre_event = new ZyreEvent ();
         zyre_event->Wrap (info.This ());
         info.GetReturnValue ().Set (info.This ());
+    } else {
+        Zyre *node = Nan::ObjectWrap::Unwrap<Zyre>(info [0].As<Object>());
+        ZyreEvent *zyre_event = new ZyreEvent (node->self);
+        if (zyre_event) {
+            zyre_event->Wrap (info.This ());
+            info.GetReturnValue ().Set (info.This ());
+        }
     }
 }
 
@@ -677,8 +734,7 @@ NAN_METHOD (ZyreEvent::_test) {
 }
 
 Nan::Persistent <Function> &ZyreEvent::constructor () {
-    static Nan::Persistent <Function> my_constructor;
-    return my_constructor;
+    return zyreEventConstructor;
 }
 
 
