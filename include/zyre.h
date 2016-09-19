@@ -55,7 +55,7 @@ ZYRE_EXPORT const char *
 //  Set node header; these are provided to other nodes during discovery
 //  and come in each ENTER message.                                    
 ZYRE_EXPORT void
-    zyre_set_header (zyre_t *self, const char *name, const char *format, ...);
+    zyre_set_header (zyre_t *self, const char *name, const char *format, ...) CHECK_PRINTF (3);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Set verbose mode; this tells the node to log all traffic as well as
@@ -69,6 +69,22 @@ ZYRE_EXPORT void
 //  e.g. development vs. production. Has no effect after zyre_start().  
 ZYRE_EXPORT void
     zyre_set_port (zyre_t *self, int port_nbr);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Set the peer evasiveness timeout, in milliseconds. Default is 5000.
+//  This can be tuned in order to deal with expected network conditions
+//  and the response time expected by the application. This is tied to 
+//  the beacon interval and rate of messages received.                 
+ZYRE_EXPORT void
+    zyre_set_evasive_timeout (zyre_t *self, int interval);
+
+//  *** Draft method, for development use, may change without warning ***
+//  Set the peer expiration timeout, in milliseconds. Default is 30000.
+//  This can be tuned in order to deal with expected network conditions
+//  and the response time expected by the application. This is tied to 
+//  the beacon interval and rate of messages received.                 
+ZYRE_EXPORT void
+    zyre_set_expired_timeout (zyre_t *self, int interval);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Set UDP beacon discovery interval, in milliseconds. Default is instant
@@ -93,7 +109,7 @@ ZYRE_EXPORT void
 //  that is meaningful to remote as well as local nodes). Returns 0 if       
 //  the bind was successful, else -1.                                        
 ZYRE_EXPORT int
-    zyre_set_endpoint (zyre_t *self, const char *format, ...);
+    zyre_set_endpoint (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Set-up gossip discovery of other nodes. At least one node in the cluster
@@ -101,14 +117,14 @@ ZYRE_EXPORT int
 //  it. Note that gossip endpoints are completely distinct from Zyre node   
 //  endpoints, and should not overlap (they can use the same transport).    
 ZYRE_EXPORT void
-    zyre_gossip_bind (zyre_t *self, const char *format, ...);
+    zyre_gossip_bind (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Set-up gossip discovery of other nodes. A node may connect to multiple
 //  other nodes, for redundancy paths. For details of the gossip network  
 //  design, see the CZMQ zgossip class.                                   
 ZYRE_EXPORT void
-    zyre_gossip_connect (zyre_t *self, const char *format, ...);
+    zyre_gossip_connect (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Start node, after setting header values. When you start a node it
@@ -158,12 +174,12 @@ ZYRE_EXPORT int
 //  *** Draft method, for development use, may change without warning ***
 //  Send formatted string to a single peer specified as UUID string
 ZYRE_EXPORT int
-    zyre_whispers (zyre_t *self, const char *peer, const char *format, ...);
+    zyre_whispers (zyre_t *self, const char *peer, const char *format, ...) CHECK_PRINTF (3);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Send formatted string to a named group
 ZYRE_EXPORT int
-    zyre_shouts (zyre_t *self, const char *group, const char *format, ...);
+    zyre_shouts (zyre_t *self, const char *group, const char *format, ...) CHECK_PRINTF (3);
 
 //  *** Draft method, for development use, may change without warning ***
 //  Return zlist of current peer ids.
@@ -224,19 +240,6 @@ ZYRE_EXPORT void
     zyre_test (bool verbose);
 
 #endif // ZYRE_BUILD_DRAFT_API
-//  @ignore
-ZYRE_EXPORT void
-    zyre_set_header (zyre_t *self, const char *name, const char *format, ...) CHECK_PRINTF (3);
-ZYRE_EXPORT int
-    zyre_set_endpoint (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
-ZYRE_EXPORT void
-    zyre_gossip_bind (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
-ZYRE_EXPORT void
-    zyre_gossip_connect (zyre_t *self, const char *format, ...) CHECK_PRINTF (2);
-ZYRE_EXPORT int
-    zyre_whispers (zyre_t *self, const char *peer, const char *format, ...) CHECK_PRINTF (3);
-ZYRE_EXPORT int
-    zyre_shouts (zyre_t *self, const char *group, const char *format, ...) CHECK_PRINTF (3);
 //  @end
 
 #define zyre_dump(z) zyre_print((z))
