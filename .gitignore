@@ -85,3 +85,4 @@ builds/android/prefix/
 
 # CLion
 .idea
+/bindings/nodejs/gyp-mac-tool
