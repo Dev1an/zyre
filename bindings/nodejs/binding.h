@@ -58,7 +58,8 @@ class Zyre: public Nan::ObjectWrap {
     static NAN_METHOD (_stop);
     static NAN_METHOD (_join);
     static NAN_METHOD (_leave);
-    static NAN_METHOD (_recv);
+	static NAN_METHOD (_recv);
+	static NAN_METHOD (nextEvent);
     static NAN_METHOD (_whisper);
     static NAN_METHOD (_shout);
     static NAN_METHOD (_whispers);
